@@ -36,20 +36,23 @@ class _PermissionScreenState extends State<PermissionScreen> {
   String _status = '';
 
   Future<void> _requestPermission() async {
-    final manageStatus = await Permission.manageExternalStorage.request();
+    // Para Android 13+
     final videoStatus = await Permission.videos.request();
 
-    print('Permissão MANAGE_EXTERNAL_STORAGE: $manageStatus');
-    print('Permissão de vídeo: $videoStatus');
+    // Para Android 12 ou menor
+    final storageStatus = await Permission.storage.request();
+
+    print('Permissão de vídeo (Android 13+): $videoStatus');
+    print('Permissão de armazenamento (<=12): $storageStatus');
 
     if (!mounted) return;
 
-    if (manageStatus.isGranted || videoStatus.isGranted) {
+    if (videoStatus.isGranted || storageStatus.isGranted) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const VideoGalleryPage()),
       );
-    } else if (manageStatus.isPermanentlyDenied || videoStatus.isPermanentlyDenied) {
+    } else if (videoStatus.isPermanentlyDenied || storageStatus.isPermanentlyDenied) {
       setState(() {
         _status = 'Permissão negada permanentemente. Vá até as configurações do app.';
       });
@@ -60,6 +63,7 @@ class _PermissionScreenState extends State<PermissionScreen> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
