@@ -30,6 +30,13 @@ class VideoWallpaperService : WallpaperService() {
     }
 
     override fun onCreateEngine(): Engine {
+        // Recupera a URI salva se o serviço foi reiniciado
+        if (currentVideoUri == null) {
+            val prefs = applicationContext.getSharedPreferences("wallpaper_prefs", Context.MODE_PRIVATE)
+            currentVideoUri = prefs.getString("videoUri", null)
+            Log.d("VideoWallpaperService", "Recuperando URI salva: $currentVideoUri")
+        }
+
         videoEngine = VideoEngine(applicationContext)
         return videoEngine as VideoEngine
     }
@@ -43,6 +50,11 @@ class VideoWallpaperService : WallpaperService() {
             surfaceHolderRef = holder
             Log.d("VideoWallpaperService", "Surface criada, iniciando player...")
             startPlayer(holder)
+        }
+
+        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+            super.onSurfaceChanged(holder, format, width, height)
+            player?.setVideoSurface(holder.surface)
         }
 
         fun updateVideo(newUri: String) {

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'preview.dart';
 
 void main() {
   runApp(const WallpaperApp());
@@ -121,22 +122,27 @@ class _VideoGalleryPageState extends State<VideoGalleryPage> {
     }
   }
 
-  Future<void> _setAsWallpaper(AssetEntity video) async {
-    try {
-      final file = await video.originFile; // ou video.file também serve
-      if (file == null) {
-        print('Arquivo não disponível.');
-        return;
-      }
-
-      final path = file.path;
-      debugPrint('Enviando path para o serviço: $path');
-
-      await _channel.invokeMethod('setWallpaper', {'videoUri': path});
-    } on PlatformException catch (e) {
-      print('Erro ao definir wallpaper: ${e.message}');
+  Future<void> _openPreview(AssetEntity video) async {
+    final file = await video.originFile;
+    if (file == null) {
+      print('Arquivo não disponível.');
+      return;
     }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => VideoPreviewScreen(
+          videoPath: file.path,
+          onConfirm: () async {
+            await _channel.invokeMethod('setWallpaper', {'videoUri': file.path});
+            Navigator.pop(context); // fecha a tela de preview
+          },
+        ),
+      ),
+    );
   }
+
 
 
   @override
@@ -164,7 +170,7 @@ class _VideoGalleryPageState extends State<VideoGalleryPage> {
                           return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                         }
                         return GestureDetector(
-                          onTap: () => _setAsWallpaper(video),
+                          onTap: () => _openPreview(video),
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
