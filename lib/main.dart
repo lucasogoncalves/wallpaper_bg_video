@@ -100,7 +100,55 @@ class _VideoGalleryPageState extends State<VideoGalleryPage> {
   void initState() {
     super.initState();
     _loadGallery();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showWallpaperHelpDialog(); // Mostra assim que a tela abrir
+    });
   }
+
+
+  void _showWallpaperHelpDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Não fecha ao clicar fora
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Atenção'),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+
+          content: const Text(
+            'Certifique que este app "Video Wallpaper" está selecionado como plano de fundo.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _openLiveWallpaperMenu();
+              },
+              child: const Text('Abrir Menu de Plano de Fundo'),
+            ),
+          ],          
+        );
+      },
+    );
+  }
+
+  Future<void> _openLiveWallpaperMenu() async {
+    const platform = MethodChannel("wallpaper.channel");
+    try {
+      await platform.invokeMethod("openLiveWallpaperPicker");
+    } on PlatformException catch (e) {
+      print("Erro ao abrir menu de plano de fundo: $e");
+    }
+  }
+
 
   Future<void> _loadGallery() async {
     try {
@@ -130,12 +178,14 @@ class _VideoGalleryPageState extends State<VideoGalleryPage> {
     }
 
     Navigator.push(
+      // ignore: use_build_context_synchronously
       context,
       MaterialPageRoute(
         builder: (_) => VideoPreviewScreen(
           videoPath: file.path,
           onConfirm: () async {
             await _channel.invokeMethod('setWallpaper', {'videoUri': file.path});
+            // ignore: use_build_context_synchronously
             Navigator.pop(context); // fecha a tela de preview
           },
         ),
@@ -148,7 +198,15 @@ class _VideoGalleryPageState extends State<VideoGalleryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Vídeos da Galeria')),
+      appBar: AppBar(
+        title: const Text('Vídeos da Galeria'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: _showWallpaperHelpDialog,
+          ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _videos.isEmpty
@@ -188,4 +246,5 @@ class _VideoGalleryPageState extends State<VideoGalleryPage> {
                 ),
     );
   }
+
 }
