@@ -8,6 +8,8 @@ import android.util.Log
 import android.view.SurfaceHolder
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.C
+
 
 class VideoWallpaperService : WallpaperService() {
 
@@ -97,11 +99,13 @@ class VideoWallpaperService : WallpaperService() {
                     setVideoSurface(holder.surface)
                     val mediaItem = MediaItem.fromUri(Uri.parse(videoPath))
                     setMediaItem(mediaItem)
+                    videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                     repeatMode = ExoPlayer.REPEAT_MODE_ALL
                     volume = 0f
                     prepare()
                     playWhenReady = true
                 }
+
                 Log.d("VideoWallpaperService", "Player pronto e reproduzindo.")
             } catch (e: Exception) {
                 Log.e("VideoWallpaperService", "Erro ao iniciar player: ${e.message}")

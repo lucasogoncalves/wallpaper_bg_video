@@ -22,6 +22,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       ..initialize().then((_) {
         setState(() {});
         _controller.setLooping(true);
+        _controller.setVolume(0.0); // SEM SOM
         _controller.play();
       });
   }
@@ -32,24 +33,37 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Preview do Vídeo")),
-      body: Column(
-        children: [
-          if (_controller.value.isInitialized)
-            AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: VideoPlayer(_controller),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text("Preview do Vídeo")),
+    body: Stack(
+      children: [
+        if (_controller.value.isInitialized)
+          Positioned.fill(
+            child: FittedBox(
+              fit: BoxFit.cover,
+              child: SizedBox(
+                width: _controller.value.size.width,
+                height: _controller.value.size.height,
+                child: VideoPlayer(_controller),
+              ),
             ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: widget.onConfirm,
-            child: const Text("Definir como Wallpaper"),
           ),
-        ],
-      ),
-    );
-  }
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: widget.onConfirm,
+              child: const Text("Definir como Wallpaper"),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
+
+}
+
